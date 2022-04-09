@@ -1,0 +1,193 @@
+* Transport Layer
+-------------------
+ Allows traffic to be directed to specific network applications;
+ 
+* Application Layer 
+---------------------
+Allows these applications to communicate in a way they can understand;
+
+* The Transport Layer
+-----------------------
+-> Has the ability to multiplex and de-multiplex;
+  * Multiplexing -> The nodes on the network have the ability to direct traffic towards many different receiving services.
+  
+  Process 1 -> 
+               | M
+  Process 2 -> | u p
+               | l l x r |   -> IP
+  Process 3 -> | t e e   |
+               | i
+  Process 4 -> |
+  
+  
+  * Demultiplexing -> Taking trafiic aimed at the same node and delivering it to the proper receiving service;
+    
+            | D
+            | e l  
+            | m e  |  -> Process 1
+      IP -> | u x  |  -> Process 2
+            | l    |
+            | t    |  -> Process 3
+            | i    |  -> Process 4 
+            | p
+   
+ - The transport layer handles multiplexing and demultiplexing through ports.
+ - A 16-bit number that's used to direct traffic to specific services running on a networked computer;
+ - Server - program running on a computer waiting to be asked for data;
+ - Client - program that is requesting this data;
+ - Different network services run while listening on specific ports for incoming request.
+ - Example : Traditional port for - HTTP or unencrypted web traffic is port 80; While requesting a webpage from a web server running on a computer listening on IP 10.1.1.100 - the traffic would be directed to port 80 on that computer;
+ 
+ - Ports are denoted by a colon after the IP address -> 10.1.1.100:80 -> Socket Address / Socket number;
+ 
+ - The same device might also be running an FTP (File Transfer Protocol) server - FTP an older method for transfering files from one computer to another but is still in use;
+ - FTP traditionally listens on port 21; - 10.1.1.100:21; 
+ 
+-> In small environments - a single server can host all the applications needed to run a business - intternal website, mail server, file server - share files, print servers - share network printers, etc - possible because of multiplexing and demultiplexing and addition of ports to the addressing scheme;
+
+-----------------------------------------------------------------------------------------------------------------------------------
+* Dissection of a TCP segment
+-----------------------------
+-> An ethernet framer encapsulates a IP datagram, an Ip datagram encapsulates a TCP segment; The ethernet frame's paylad is the entire content of the IP datagram; The Ip datagram's payload section is made up of the TCP segment;
+
+-> TCP segment - madeup of a TCP header and a data section; The data section is where the application layer places its data;
+-> A TCP header is split into different fields;
+       Bit 0                                Bit 15 Bit 16                             Bit 31
+        ----------------------------------------------------------------------------------
+                Source port (16)                 |     Destination port (16)
+        ----------------------------------------------------------------------------------
+                        Sequence number   (32)
+        ----------------------------------------------------------------------------------
+                          Acknowledgment number (32)
+        ----------------------------------------------------------------------------------     20
+        Header length(4)|Empty(6)|Control Flags(6)|    Window (16)
+        ----------------------------------------------------------------------------------    Bytes
+              Checksum (16)                       |     Urgent (16)
+        ----------------------------------------------------------------------------------
+            Options (0 or 16 if any)              |   Padding
+        ----------------------------------------------------------------------------------
+                          Data payload (varies)
+        ----------------------------------------------------------------------------------    
+ 
+ 1. Source port - A high-number port chosen from a special section of ports known as ephemeral ports - required to keep lots of outgoing connections separate - response is received by the web browser;
+ 2. Destination port - The port of the service the traffic is intended for;
+ 3. Sequence number - A 32-bit number used to keep track of where in a sequence of TCP segments this one is expected to be; 
+      The Ethernet frame has a limit of 1518 bytes and if the intended data to be sent is more than that the it is framnented and sent;
+ 4. Acknowledgment number - The number of thenext expected segment;
+ 5. Header length/ Data offset - 4 bit number that communicates how long a TCP header for this segment is;
+ 6. Empty - 
+ 7. Control Flags - TCP control flags
+ 8. TCP Window - specifies the range of sequencesnumbers that might be sent before the acknowledgment is required; 
+ 9. Checksum - When all the segments are ingested by the recipient the checksum is calculated across the entire segment and compared with the checksum in the header to make sure no data is lost or corrupted;
+ 10. Urgent - Used in conjunction with one of the TCP control flags to point out particular segments that might be more important than others;
+ 11. Options -  complicated flow control protocols;
+ 12. padding - extra zeros to ensure that the data payload section begins at the expected location;
+ 
+-----------------------------------------------------------------------------------------------------------------------------------
+* TCP Control Flags and the three-way handshake
+-------------------------------------------------
+-> TCP as a protocols establishes connections used to send long chains of segments of data.
+-> TCP establishes connections through the use of different TCP control flags used in a very specific order.
+
+-> 6 TCP control flags - order they appear in the TCP header
+------------------------
+1. URG -> Urgent - A value of one here indicates that the segment is considered urgent and that the urgent pointer field has more data about this;
+2. ACK -> Acknowledged - A value of one in this field means that the acknowledgment number field should be examined.
+3. PSH -> push - The transmitting device wants the receiving device to push currently-buffered data to the application on the receiving end as soon as possible.
+(A buffer is a computing technique where a certain amount of data is held somewhere, before being sent elsewhere  -  used to send large chunks of data more efficiently);
+4. RST - Reset - One of the sides in a TCP connection has not been able to properly recover from a series of missing or malformed segments;
+5. SYN (synchronize) - It's used when first establishing a TCP connection and makes sure the receiving end knows to examine the sequence number field;
+6. FIN (finish) - When this flag is set to one, it means the transmitting computer does not have any more data to send and the connection can be closed.
+
+* Example of how a TCP control flags are used and connections are set:
+----------------------------------------------------------------------
+a. Computer A wants to establish connection with Computer B; Computer A - transmitting omputer, Computer B - Receving Computer;
+b. Computer A - sends a TCP segment top Computer B with the SYN flag set - Computer A wants to establish connection with Computer B and look at A's sequence number field;
+c. Computer B responds - by sending - a SYN/ACK Flags set - in order to establish the connection;
+d. Computer A responds only with the ACK flag set - to send data;
+
+Handshake -> A way for two devices to ensure that they are speaking the same protocol and will be ab;le to understand each other.
+
+A                     B
+   -------SYN-------->
+   <----SYN/ACK-------
+   -------ACK--------->
+   
+Since bothe A and B are able to exchange data - TCP connection at this state is operating in full DUPLEX;
+
+* Close the Connection - Four Way Handshake
+--------------------------------------------
+
+A                                    B
+    <---------FIN-------------------
+    ----------ACK------------------->
+    ------------FIN----------------->
+    <-----------ACK------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------
+* TCP Socket States
+---------------------
+* Socket - The intantiation of an end-point in a potential TCP connection;
+* Instantiation - The actual implementation of something defined elsewhere.
+-> The traffic can be sent to any port, but the response will be available only if the program has opened a socket on that port.
+-> TCP sockets can exist in a lot of states.
+  a. LISTEN - A TCP socket is ready and listening for incoming connections - only on the server side;
+  b. SYN_SENT - A synchronication request has been sent but the connection hasn't been established yet; - only on the client side;
+  c. SYN-RECEIVED - A socket previously in a LISTEN state has received a synchronization request and sent a SYN/ACK back; - only on the server side;
+  d. ESTABLISHED - The TCP connection is in working order and both sides are free to send to each other data; - state is available in both the client and server sides of the connection;
+  e. FIN_WAIT - A FIN has been sent, but the corresponding ACK from the other end hasn't been received yet;
+  f. CLOSE_WAIT - The connection has been closed at the TCP layer, but that the application that opened the socket hasn't released its hold on the socket yet;
+  g. CLOSED - The connection has been fully terminated and that no further communication is possible;
+  
+There are more socket states, TCP protocols is universal but the socket states names may vary from operating systems but their functionality is the same; 
+
+----------------------------------------------------------------------------------------------------------------------------------------
+* Connection-oriented and Connectionless Protocols
+--------------------------------------------------
+-> Connection-oriented Protocols - Establishes a connection, and uses this to ensure that all data has been properly transmitted. (TCP);
+  Every segment of data sent is acknowledged;
+- At the Ethernet and IP layer if the Checksum does not computer all the data is discarded, and it is up to TCP to determine when to resend the data since TCP expects an ACK for every bit of data it sends;
+- Sequence numbers enable data to be put back in the same order;
+-> There is a lot of overheade in regrad to the connection-oriented protocol
+  - Need to establish a connection;
+  - Need to send a stream of constant streams of acknowledgments;
+  - Tear the connection down at the end;
+ 
+-> Connectionless Protocol - User Datagram Protocol (UDP) - Here you set the destination port and send the packet - useful for messages that are not supper important - example - streaming video -  bandwidth is used for actual data rather than establishing connection overhead;
+
+----------------------------------------------------------------------------------------------------------------------------------------
+* System ports V/s Ephemeral ports
+------------------------------------
+- Transportation layer protocols use the concept of ports and multiplexing and demultiplexing to deliever data to individual service listening on network nodes. These ports are represented by a single 16-bit number (0 - 65535);
+
+The IANA has split the range into independent sections :
+---------------------------------------------------------
+- Port 0 - It is not used for network traffic, but for communication between different programs on the same computer;
+- Ports 1 - 1023 - System ports / ports - used for network services;
+     HTTP  - port 80; 
+     FTP - port 21; 
+     Most OS Administrative access is required to start a program that listens on a system port;
+- Ports 1024 - 49151 - registered ports - used for uncommon network services;
+    port 3306 - database listen on;
+    On most operating systems, any user of any access level can start a program listening on a registered port.
+- Ports 49152 - 65535 -  private or ephemeral ports
+     Ephemeral ports can’t be registered with the IANA and are generally used for establishing outbound connections.
+     All TCP traffic uses a destination port and a source port.
+     When a client wants to communicate with a server, the client will be assigned an ephemeral port to be used for just that one connection, while the server listens on a static system or registered port.
+
+
+----------------------------------------------------------------------------------------------------------------------------------------
+* Firewalls
+---------------
+- A device that blocks traffic that meets certain criteria;
+- Provide secure network and can operate at lots of different layers of a network;
+   - Inspection of application layer traffic;
+   - Block ranges of IP addresses;
+ - They are most commonly used at the transportation layer;
+    - Firewalls will have configuration to enable data to flow through certain ports while be blocked on other ports;
+    
+-> A firewall can be configured at the perimeter of the network enabling clients/IPs to view the network and preventing any other information or access;
+-> Firewalls can be independent networks but could also be programs that could be run anywhere;
+-> Many cases the functionality of the router and firewalls is performed by the same device;
+-> Firewalss can run on individual hosts instead of being a network device;
+-> All major modern os habe firewall functionality built-in - therefore blocking services to ports can be performed at the host level as well;
